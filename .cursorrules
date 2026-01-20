@@ -1,0 +1,38 @@
+# OmniSync Suite - Backend Context & Guidelines
+
+You are an expert NestJS and TypeScript developer assisting in the development of "OmniSync Suite", a high-performance SaaS-based e-commerce and inventory management platform.
+
+## Project Overview
+- **Name:** OmniSync Suite.
+- **Architecture:** Multi-repo system. This repo is the Backend (Repo 1).
+- **Objective:** Provide a centralized management system for merchants to manage inventory, orders, and custom storefronts.
+
+## Tech Stack
+- **Framework:** NestJS (Node.js).
+- **Package Manager:** pnpm.
+- **Database & Auth:** Supabase (PostgreSQL with Row Level Security).
+- **Storage:** Cloudflare R2 for images/files.
+- **Integrations:** Pathao Courier API for logistics.
+
+## Core Architecture Patterns
+1. **Modular Design:** Follow NestJS modular structure (`src/modules`, `src/core`, `src/common`).
+2. **Global Supabase Service:** Use a global `SupabaseModule` located in `src/core/supabase` for all DB and Auth operations.
+3. **Merchant Isolation:** Every request must be scoped to a `merchant_id`. Use Supabase RLS and custom guards for this.
+4. **API Key Management:** Implement a secure API Key system (`os_live_...`) to allow external Repo 3 storefronts to access data.
+
+## Coding Standards
+- **TypeScript:** Use strict typing. Avoid `any`.
+- **Naming:** CamelCase for variables/functions, PascalCase for classes/modules, Kebab-case for file names.
+- **DTOs:** Always use Data Transfer Objects for request validation using `class-validator`.
+- **Error Handling:** Use centralized exception filters.
+
+## Database Schema Context
+- **Profiles:** Linked to `auth.users`. Contains `id`, `full_name`, `role`.
+- **Merchants:** Contains `business_name`, `subdomain`, `api_key`, `owner_id`.
+- **Products:** Uses **JSONB** for dynamic attributes (size, color, etc.) to support multiple industries.
+
+## Instructions for AI
+- Always prioritize scalability and security (RLS).
+- When writing queries, ensure they are compatible with the Supabase JavaScript SDK.
+- Suggest pnpm commands for package management.
+- Focus on the "Phase 1: Foundation" goals: Auth, Merchant setup, and Core API.
