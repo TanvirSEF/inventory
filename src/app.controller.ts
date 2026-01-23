@@ -46,7 +46,7 @@ export class AppController {
         status: 'error',
         message: 'Supabase connection failed',
         connected: false,
-        error: error.message || 'Unknown error',
+        error: error instanceof Error ? error.message : 'Unknown error',
         timestamp: new Date().toISOString(),
       };
     }

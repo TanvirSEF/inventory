@@ -4,6 +4,7 @@ import { MerchantsController } from './merchants.controller';
 
 @Module({
   providers: [MerchantsService],
-  controllers: [MerchantsController]
+  controllers: [MerchantsController],
+  exports: [MerchantsService], // Export service so AuthModule can use it
 })
 export class MerchantsModule {}
