@@ -187,7 +187,7 @@ export class AdminService {
         .select('*', { count: 'exact', head: true })
         .eq('is_active', true),
       this.supabase.adminClient
-        .from('categories')
+        .from('global_categories')
         .select('*', { count: 'exact', head: true }),
     ]);
 
@@ -386,40 +386,6 @@ export class AdminService {
     }
 
     return { message: 'Category deleted successfully' };
-  }
-
-  // ==================== CATEGORIES MANAGEMENT (ALL MERCHANTS) ====================
-
-  async getAllCategories(page = 1, limit = 50, merchantId?: string) {
-    let query = this.supabase.adminClient
-      .from('categories')
-      .select('*, merchant:merchants!categories_merchant_id_fkey(id, business_name)', {
-        count: 'exact',
-      })
-      .order('created_at', { ascending: false });
-
-    if (merchantId) {
-      query = query.eq('merchant_id', merchantId);
-    }
-
-    const from = (page - 1) * limit;
-    const to = from + limit - 1;
-
-    const { data, error, count } = await query.range(from, to);
-
-    if (error) {
-      throw new BadRequestException(error.message);
-    }
-
-    return {
-      data: data || [],
-      pagination: {
-        page,
-        limit,
-        total: count || 0,
-        totalPages: Math.ceil((count || 0) / limit),
-      },
-    };
   }
 
   // ==================== SYSTEM CONFIGURATION ====================
