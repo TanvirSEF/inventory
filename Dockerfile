@@ -3,6 +3,8 @@ FROM node:22-alpine AS base
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable
+# Install libc6-compat for compatibility with native binaries (like Supabase CLI)
+RUN apk add --no-cache libc6-compat
 
 # Dependencies stage
 FROM base AS deps
