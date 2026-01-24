@@ -10,6 +10,7 @@ import {
   UseGuards,
   Request,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiBody } from '@nestjs/swagger';
 import { AdminService } from './admin.service';
 import { SupabaseAuthGuard } from '../../common/guards/supabase-auth.guard';
 import { SuperAdminGuard } from '../../common/guards/super-admin.guard';
@@ -18,6 +19,8 @@ import { UpdateMerchantStatusDto } from './dto/update-merchant-status.dto';
 import { CreateCategoryDto } from '../categories/dto/create-category.dto';
 import { UpdateCategoryDto } from '../categories/dto/update-category.dto';
 
+@ApiTags('admin')
+@ApiBearerAuth('JWT-auth')
 @Controller('admin')
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
@@ -114,6 +117,7 @@ export class AdminController {
 
   @Post('categories')
   @UseGuards(SupabaseAuthGuard, SuperAdminGuard)
+  @ApiBody({ type: CreateCategoryDto })
   createGlobalCategory(
     @Body() createCategoryDto: CreateCategoryDto,
     @Request() req: { user: { id: string } },
@@ -140,6 +144,7 @@ export class AdminController {
 
   @Patch('categories/:id')
   @UseGuards(SupabaseAuthGuard, SuperAdminGuard)
+  @ApiBody({ type: UpdateCategoryDto })
   updateGlobalCategory(
     @Param('id') id: string,
     @Body() updateCategoryDto: UpdateCategoryDto,

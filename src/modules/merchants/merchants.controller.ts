@@ -8,6 +8,7 @@ import {
   Delete,
   UseGuards,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiBody } from '@nestjs/swagger';
 import { MerchantsService } from './merchants.service';
 import { CreateMerchantDto } from './dto/create-merchant.dto';
 import { UpdateMerchantDto } from './dto/update-merchant.dto';
@@ -16,12 +17,15 @@ import { MerchantGuard } from '../../common/guards/merchant.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { User } from '@supabase/supabase-js';
 
+@ApiTags('merchants')
+@ApiBearerAuth('JWT-auth')
 @Controller('merchants')
 @UseGuards(SupabaseAuthGuard)
 export class MerchantsController {
   constructor(private readonly merchantsService: MerchantsService) {}
 
   @Post()
+  @ApiBody({ type: CreateMerchantDto })
   create(@Body() createMerchantDto: CreateMerchantDto, @CurrentUser() user: User) {
     return this.merchantsService.create(user.id, createMerchantDto);
   }
@@ -38,6 +42,7 @@ export class MerchantsController {
 
   @Patch(':id')
   @UseGuards(MerchantGuard)
+  @ApiBody({ type: UpdateMerchantDto })
   update(
     @Param('id') id: string,
     @Body() updateMerchantDto: UpdateMerchantDto,
