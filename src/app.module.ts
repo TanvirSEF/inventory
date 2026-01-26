@@ -7,6 +7,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { MerchantsModule } from './modules/merchants/merchants.module';
 import { CategoriesModule } from './modules/categories/categories.module';
 import { AdminModule } from './modules/admin/admin.module';
+import { ProductsModule } from './modules/products/products.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { AdminModule } from './modules/admin/admin.module';
     MerchantsModule,
     CategoriesModule,
     AdminModule,
+    ProductsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
