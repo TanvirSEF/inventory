@@ -8,7 +8,7 @@ export class AppController {
     private readonly appService: AppService,
     private readonly supabaseService: SupabaseService,
   ) { }
-
+ 
   @Get()
   getHello(): string {
     return this.appService.getHello();
