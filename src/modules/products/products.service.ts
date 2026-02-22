@@ -1,6 +1,7 @@
-import { Injectable, BadRequestException, InternalServerErrorException } from '@nestjs/common';
+import { Injectable, BadRequestException, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { SupabaseService } from '../../core/supabase/supabase.service';
 import { CreateProductDto } from './dto/create-product.dto';
+import { UpdateProductDto } from './dto/update-product.dto';
 
 interface AttributeSchemaItem {
     name: string;
@@ -11,6 +12,121 @@ interface AttributeSchemaItem {
 @Injectable()
 export class ProductsService {
     constructor(private readonly supabase: SupabaseService) { }
+
+    async update(id: string, merchantId: string, updateProductDto: UpdateProductDto) {
+        // 1. Verify ownership and get current product details
+        const existingProduct = await this.findOne(id, merchantId);
+
+        let updateData: Record<string, any> = {
+            ...(updateProductDto.name && { name: updateProductDto.name }),
+            ...(updateProductDto.description !== undefined && { description: updateProductDto.description }),
+            ...(updateProductDto.base_price !== undefined && { base_price: updateProductDto.base_price }),
+            ...(updateProductDto.stock_level !== undefined && { stock_level: updateProductDto.stock_level }),
+            ...(updateProductDto.image_urls && { image_urls: updateProductDto.image_urls }),
+            updated_at: new Date().toISOString(),
+        };
+
+        // 2. Handle dynamic attributes update if provided
+        if (updateProductDto.attributes) {
+            // Fetch Category Attribute Schema based on product's category_id
+            const { data: category, error: categoryError } = await this.supabase.client
+                .from('global_categories')
+                .select('attribute_schema')
+                .eq('id', existingProduct.category_id)
+                .single();
+
+            if (categoryError || !category) {
+                throw new InternalServerErrorException('Failed to fetch category schema for validation');
+            }
+
+            // Merge new attributes with existing ones or use entirely new ones based on requirements.
+            // Using a simple merge strategy here.
+            const mergedAttributes = { ...existingProduct.attributes, ...updateProductDto.attributes };
+
+            // Validate the merged attributes against the schema
+            this.validateAttributes(mergedAttributes, category.attribute_schema);
+            updateData.attributes = mergedAttributes;
+        }
+
+        // 3. Update the database
+        const { data, error } = await this.supabase.client
+            .from('products')
+            .update(updateData)
+            .eq('id', id)
+            .eq('merchant_id', merchantId)
+            .select()
+            .single();
+
+        if (error) {
+            throw new BadRequestException(error.message);
+        }
+
+        return data;
+    }
+
+    async remove(id: string, merchantId: string) {
+        // 1. Verify ownership
+        await this.findOne(id, merchantId);
+
+        // 2. Delete the product
+        const { error } = await this.supabase.client
+            .from('products')
+            .delete()
+            .eq('id', id)
+            .eq('merchant_id', merchantId);
+
+        if (error) {
+            throw new BadRequestException(error.message);
+        }
+
+        return { message: 'Product deleted successfully' };
+    }
+
+    async findOne(id: string, merchantId: string) {
+        const { data, error } = await this.supabase.client
+            .from('products')
+            .select('*')
+            .eq('id', id)
+            .eq('merchant_id', merchantId)
+            .single();
+
+        if (error || !data) {
+            throw new NotFoundException('Product not found');
+        }
+
+        return data;
+    }
+
+    async findAll(merchantId: string, page = 1, limit = 20, search?: string) {
+        let query = this.supabase.client
+            .from('products')
+            .select('*', { count: 'exact' })
+            .eq('merchant_id', merchantId)
+            .order('created_at', { ascending: false });
+
+        if (search) {
+            query = query.ilike('name', `%${search}%`);
+        }
+
+        const from = (page - 1) * limit;
+        const to = from + limit - 1;
+
+        const { data, error, count } = await query.range(from, to);
+
+        if (error) {
+            throw new BadRequestException(error.message);
+        }
+
+        return {
+            data: data || [],
+            pagination: {
+                page,
+                limit,
+                total: count || 0,
+                totalPages: Math.ceil((count || 0) / limit),
+            },
+        };
+    }
 
     async create(merchantId: string, createProductDto: CreateProductDto) {
         // 1. Fetch Merchant's Category ID
