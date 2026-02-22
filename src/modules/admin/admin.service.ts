@@ -7,7 +7,7 @@ import { SupabaseService } from '../../core/supabase/supabase.service';
 
 @Injectable()
 export class AdminService {
-  constructor(private readonly supabase: SupabaseService) {}
+  constructor(private readonly supabase: SupabaseService) { }
 
 
   // ==================== MERCHANTS MANAGEMENT ====================
@@ -88,84 +88,6 @@ export class AdminService {
     return { message: 'Merchant deleted successfully' };
   }
 
-  // ==================== USERS MANAGEMENT ====================
-
-  async getAllUsers(page = 1, limit = 50, search?: string) {
-    let query = this.supabase.adminClient
-      .from('profiles')
-      .select('*', { count: 'exact' })
-      .order('updated_at', { ascending: false });
-
-    if (search) {
-      query = query.or(`full_name.ilike.%${search}%`);
-    }
-
-    const from = (page - 1) * limit;
-    const to = from + limit - 1;
-
-    const { data, error, count } = await query.range(from, to);
-
-    if (error) {
-      throw new BadRequestException(error.message);
-    }
-
-    return {
-      data: data || [],
-      pagination: {
-        page,
-        limit,
-        total: count || 0,
-        totalPages: Math.ceil((count || 0) / limit),
-      },
-    };
-  }
-
-  async getUserById(userId: string) {
-    const { data, error } = await this.supabase.adminClient
-      .from('profiles')
-      .select('*, merchants(*)')
-      .eq('id', userId)
-      .single();
-
-    if (error || !data) {
-      throw new NotFoundException('User not found');
-    }
-
-    return data;
-  }
-
-  async updateUserRole(userId: string, role: string) {
-    const validRoles = ['merchant', 'admin', 'super_admin'];
-    if (!validRoles.includes(role)) {
-      throw new BadRequestException(`Invalid role. Must be one of: ${validRoles.join(', ')}`);
-    }
-
-    const { data, error } = await this.supabase.adminClient
-      .from('profiles')
-      .update({ role })
-      .eq('id', userId)
-      .select()
-      .single();
-
-    if (error) {
-      throw new BadRequestException(error.message);
-    }
-
-    return data;
-  }
-
-  async deleteUser(userId: string) {
-    // Delete user will cascade delete profile and merchants
-    const { error } = await this.supabase.adminClient.auth.admin.deleteUser(
-      userId,
-    );
-
-    if (error) {
-      throw new BadRequestException(error.message);
-    }
-
-    return { message: 'User deleted successfully' };
-  }
 
   // ==================== SYSTEM STATISTICS ====================
 

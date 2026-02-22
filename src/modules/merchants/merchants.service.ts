@@ -11,13 +11,9 @@ import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class MerchantsService {
-  constructor(private readonly supabase: SupabaseService) {}
+  constructor(private readonly supabase: SupabaseService) { }
 
-  async create(
-    ownerId: string,
-    createMerchantDto: CreateMerchantDto,
-    categoryId?: string,
-  ) {
+  async create(ownerId: string, createMerchantDto: CreateMerchantDto, categoryId?: string) {
     // Check if subdomain is already taken
     const { data: existing } = await this.supabase.client
       .from('merchants')
@@ -29,25 +25,17 @@ export class MerchantsService {
       throw new BadRequestException('Subdomain is already taken');
     }
 
-    // Verify category exists if provided
     if (categoryId) {
-      const { data: category, error: categoryError } =
-        await this.supabase.client
-          .from('global_categories')
-          .select('id, is_active')
-          .eq('id', categoryId)
-          .single();
+      const { data: category, error: categoryError } = await this.supabase.client
+        .from('global_categories')
+        .select('id, is_active')
+        .eq('id', categoryId)
+        .single();
 
-      if (categoryError || !category) {
-        throw new BadRequestException('Invalid category selected');
-      }
-
-      if (!category.is_active) {
-        throw new BadRequestException('Selected category is not active');
-      }
+      if (categoryError || !category) throw new BadRequestException('Invalid category selected');
+      if (!category.is_active) throw new BadRequestException('Selected category is not active');
     }
 
-    // Generate API key
     const apiKey = `os_live_${uuidv4().replace(/-/g, '')}`;
 
     const { data, error } = await this.supabase.client
@@ -63,12 +51,10 @@ export class MerchantsService {
       .select()
       .single();
 
-    if (error) {
-      throw new BadRequestException(error.message);
-    }
-
+    if (error) throw new BadRequestException(error.message);
     return data;
   }
+
 
   async findAll(ownerId?: string) {
     let query = this.supabase.client.from('merchants').select('*');

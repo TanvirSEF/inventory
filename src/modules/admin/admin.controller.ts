@@ -23,7 +23,7 @@ import { UpdateCategoryDto } from '../categories/dto/update-category.dto';
 @ApiBearerAuth('JWT-auth')
 @Controller('admin')
 export class AdminController {
-  constructor(private readonly adminService: AdminService) {}
+  constructor(private readonly adminService: AdminService) { }
 
   // ==================== PROTECTED ADMIN ENDPOINTS ====================
 
@@ -76,42 +76,6 @@ export class AdminController {
     return this.adminService.deleteMerchant(id);
   }
 
-  // ==================== USERS MANAGEMENT ====================
-
-  @Get('users')
-  @UseGuards(SupabaseAuthGuard, SuperAdminGuard)
-  getAllUsers(
-    @Query('page') page?: string,
-    @Query('limit') limit?: string,
-    @Query('search') search?: string,
-  ) {
-    return this.adminService.getAllUsers(
-      page ? parseInt(page, 10) : 1,
-      limit ? parseInt(limit, 10) : 50,
-      search,
-    );
-  }
-
-  @Get('users/:id')
-  @UseGuards(SupabaseAuthGuard, SuperAdminGuard)
-  getUserById(@Param('id') id: string) {
-    return this.adminService.getUserById(id);
-  }
-
-  @Patch('users/:id/role')
-  @UseGuards(SupabaseAuthGuard, SuperAdminGuard)
-  updateUserRole(
-    @Param('id') id: string,
-    @Body() updateRoleDto: UpdateUserRoleDto,
-  ) {
-    return this.adminService.updateUserRole(id, updateRoleDto.role);
-  }
-
-  @Delete('users/:id')
-  @UseGuards(SupabaseAuthGuard, SuperAdminGuard)
-  deleteUser(@Param('id') id: string) {
-    return this.adminService.deleteUser(id);
-  }
 
   // ==================== GLOBAL CATEGORIES MANAGEMENT ====================
 
